@@ -190,9 +190,10 @@
             if (/[a-z]/.test(password)) charset += 26;
             if (/[A-Z]/.test(password)) charset += 26;
             if (/\d/.test(password)) charset += 10;
-            if (/[!?#=]/.test(password)) charset += 10;
-            
-            return password.length * Math.log2(charset || 1);
+            // Hier wird nur nach 4 Sonderzeichen gesucht, aber als 10 gezählt
+            if (/[!?#=]/.test(password)) charset += 4;
+            // Verhindert Division durch Null oder negative Werte
+            return Math.max(0, password.length * Math.log2(charset || 1));
         }
 
         function estimateCrackTime(entropy) {
