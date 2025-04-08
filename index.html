@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passwort-Sicherheitscheck</title>
+    <style>
+        :root {
+            --primary: #1a1b26;
+            --secondary: #2a2b3d;
+            --accent: #7aa2f7;
+            --success: #9ece6a;
+            --warning: #ff9e64;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--primary);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: grid;
+            place-items: center;
+        }
+
+        .container {
+            background: var(--secondary);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+            border: 2px solid #3b3d4f;
+            border-radius: 8px;
+            background: #252631;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        .strength-meter {
+            height: 8px;
+            background: #3b3d4f;
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--warning), var(--success));
+            transition: width 0.3s ease;
+        }
+
+        .criteria {
+            margin: 1.5rem 0;
+        }
+
+        .criterion {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.5rem 0;
+            padding: 0.8rem;
+            background: #323444;
+            border-radius: 6px;
+        }
+
+        .criterion.valid {
+            background: rgba(158, 206, 106, 0.1);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4a4d5c;
+        }
+
+        .criterion.valid .status-dot {
+            background: var(--success);
+        }
+
+        .crack-time-estimate {
+            text-align: center;
+            padding: 1.5rem;
+            background: #323444;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+
+        .crack-time {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin: 0.5rem 0;
+        }
+
+        .warning {
+            color: var(--warning);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Passwort-Sicherheitscheck</h1>
+        <input type="text" class="password-input" placeholder="Passwort eingeben..." autocomplete="off">
+        
+        <div class="strength-meter">
+            <div class="strength-bar"></div>
+        </div>
+
+        <div class="criteria">
+            <div class="criterion">
+                <div class="status-dot"></div>
+                <span>Mindestens 12 Zeichen</span>
+            </div>
+            <div class="criterion">
+                <div class="status-dot"></div>
+                <span>Zahl am Ende</span>
+            </div>
+            <div class="criterion">
+                <div class="status-dot"></div>
+                <span>Sonderzeichen (!?#=)</span>
+            </div>
+        </div>
+
+        <div class="crack-time-estimate">
+            <div>Geschätzte Knackzeit:</div>
+            <div class="crack-time" id="crackTime">-</div>
+            <div class="warning">* Basierend auf 1 Billion Versuchen/Sekunde</div>
+        </div>
+    </div>
+
+    <script>
+        const criteria = [
+            { check: pw => pw.length >= 12 },
+            { check: pw => /\d$/.test(pw) },
+            { check: pw => /[!?#=]/.test(pw) }
+        ];
+
+        function calculateEntropy(password) {
+            let charset = 0;
+            if (/[a-z]/.test(password)) charset += 26;
+            if (/[A-Z]/.test(password)) charset += 26;
+            if (/\d/.test(password)) charset += 10;
+            if (/[!?#=]/.test(password)) charset += 10;
+            
+            return password.length * Math.log2(charset || 1);
+        }
+
+        function estimateCrackTime(entropy) {
+            const guessesPerSecond = 1e12; // 1 Billion Versuche/Sekunde
+            const seconds = Math.pow(2, entropy) / guessesPerSecond;
+            
+            if (seconds < 1) return "Sofort";
+            if (seconds < 60) return `${Math.round(seconds)} Sekunden`;
+            if (seconds < 3600) return `${Math.round(seconds/60)} Minuten`;
+            if (seconds < 86400) return `${Math.round(seconds/3600)} Stunden`;
+            if (seconds < 31536000) return `${Math.round(seconds/86400)} Tage`;
+            return `${Math.round(seconds/31536000)} Jahre`;
+        }
+
+        function updateUI(password) {
+            // Kriterien aktualisieren
+            document.querySelectorAll('.criterion').forEach((el, i) => {
+                el.classList.toggle('valid', criteria[i].check(password));
+            });
+
+            // Passwortstärke
+            const validCount = criteria.filter(c => c.check(password)).length;
+            document.querySelector('.strength-bar').style.width = 
+                `${(validCount / criteria.length) * 100}%`;
+
+            // Knackzeit berechnen
+            const crackTime = password ? 
+                estimateCrackTime(calculateEntropy(password)) : 
+                "Bitte Passwort eingeben";
+            document.getElementById('crackTime').textContent = crackTime;
+        }
+
+        document.querySelector('.password-input').addEventListener('input', (e) => {
+            updateUI(e.target.value);
+        });
+
+        // Initialen Zustand setzen
+        updateUI('');
+    </script>
+</body>
+</html>
