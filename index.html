@@ -3,21 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passwort-Sicherheitscheck</title>
+    <title>SecurePass | Passwort-Analyse</title>
     <style>
         :root {
-            --background: #0f172a;
+            --bg: #0f172a;
             --surface: #1e293b;
             --primary: #818cf8;
             --success: #34d399;
-            --text: #f8fafc;
+            --text: #f1f5f9;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui;
         }
 
         body {
-            margin: 0;
             min-height: 100vh;
-            background: var(--background);
-            font-family: 'Inter', system-ui;
+            background: var(--bg);
             color: var(--text);
             display: grid;
             place-items: center;
@@ -28,41 +34,44 @@
             background: var(--surface);
             padding: 2.5rem;
             border-radius: 1.5rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             width: 100%;
-            max-width: 480px;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
         }
 
-        h1 {
+        .header {
             text-align: center;
-            margin: 0 0 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
             font-size: 1.8rem;
             background: linear-gradient(45deg, var(--primary), #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
         }
 
         .password-input {
             width: 100%;
             padding: 1rem 1.5rem;
             font-size: 1.1rem;
-            border: 2px solid #334155;
+            border: 2px solid var(--border);
             border-radius: 0.75rem;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.03);
             color: var(--text);
-            margin-bottom: 1.5rem;
             transition: all 0.2s ease;
         }
 
         .password-input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(129,140,248,0.2);
+            box-shadow: 0 0 0 3px rgba(129,140,248,0.15);
         }
 
-        .criteria-list {
+        .criteria-grid {
             display: grid;
-            gap: 0.75rem;
+            gap: 1rem;
             margin: 2rem 0;
         }
 
@@ -70,25 +79,28 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            padding: 0.75rem 1rem;
-            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
             border-radius: 0.5rem;
-            opacity: 0.7;
+            border: 1px solid var(--border);
+            opacity: 0.6;
             transition: all 0.2s ease;
         }
 
         .criterion.valid {
             opacity: 1;
-            background: rgba(52,211,153,0.1);
+            border-color: var(--success);
+            background: rgba(52,211,153,0.05);
         }
 
         .checkmark {
-            width: 1.25rem;
-            height: 1.25rem;
-            border: 2px solid #334155;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            display: grid;
-            place-items: center;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .criterion.valid .checkmark {
@@ -96,41 +108,55 @@
             border-color: transparent;
         }
 
+        .checkmark::after {
+            content: '✓';
+            color: white;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .criterion.valid .checkmark::after {
+            opacity: 1;
+        }
+
         .crack-time {
             text-align: center;
             padding: 1.5rem;
-            background: linear-gradient(45deg, var(--surface), #1a2333);
+            background: linear-gradient(45deg, rgba(129,140,248,0.1), rgba(167,139,250,0.05));
             border-radius: 1rem;
             margin-top: 2rem;
         }
 
+        .crack-time-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
         .crack-time-value {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 600;
             margin: 0.5rem 0;
             color: var(--primary);
         }
 
         .disclaimer {
-            font-size: 0.9rem;
-            color: #94a3b8;
+            font-size: 0.8rem;
+            color: #64748b;
             margin-top: 1rem;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 1.5rem;
-                border-radius: 1rem;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔐 Passwort-Sicherheitscheck</h1>
+        <div class="header">
+            <h1>🔒 SecurePass</h1>
+            <p class="disclaimer">Keine Daten werden gespeichert</p>
+        </div>
+
         <input type="text" class="password-input" placeholder="Passwort eingeben..." autocomplete="off">
-        
-        <div class="criteria-list">
+
+        <div class="criteria-grid">
             <div class="criterion">
                 <div class="checkmark"></div>
                 <span>Mindestens 12 Zeichen</span>
@@ -146,7 +172,7 @@
         </div>
 
         <div class="crack-time">
-            <div>Geschätzte Knackzeit</div>
+            <div class="crack-time-label">Geschätzte Knackzeit</div>
             <div class="crack-time-value" id="crackTime">-</div>
             <div class="disclaimer">* Bei 1 Billion Versuchen/Sekunde</div>
         </div>
@@ -159,19 +185,63 @@
             { check: pw => /[!?#=]/.test(pw) }
         ];
 
+        function calculateEntropy(password) {
+            let charset = 0;
+            if (/[a-z]/.test(password)) charset += 26;
+            if (/[A-Z]/.test(password)) charset += 26;
+            if (/\d/.test(password)) charset += 10;
+            if (/[!?#=]/.test(password)) charset += 10;
+            
+            return password.length * Math.log2(charset || 1);
+        }
+
+        function estimateCrackTime(entropy) {
+            const guessesPerSecond = 1e12;
+            const seconds = Math.pow(2, entropy) / guessesPerSecond;
+            
+            const units = [
+                { limit: 1, unit: "Sofort" },
+                { limit: 60, unit: "Sekunden" },
+                { limit: 3600, unit: "Stunden" },
+                { limit: 86400, unit: "Tagen" },
+                { limit: 2592000, unit: "Monaten" },
+                { limit: 31536000, unit: "Jahren" },
+                { limit: Infinity, unit: "Jahrhunderten" }
+            ];
+
+            let time = seconds;
+            for (const unit of units) {
+                if (time < unit.limit) {
+                    return unit.unit === "Sofort" 
+                        ? unit.unit 
+                        : `${Math.ceil(time)} ${unit.unit}`;
+                }
+                time /= unit.limit;
+            }
+            return "Mehrere Jahrhunderte";
+        }
+
         function updateUI(password) {
+            // Kriterien aktualisieren
             document.querySelectorAll('.criterion').forEach((el, index) => {
-                el.classList.toggle('valid', criteria[index].check(password));
+                const isValid = criteria[index].check(password);
+                el.classList.toggle('valid', isValid);
             });
 
-            // Knackzeit-Berechnung hier einfügen
-            document.getElementById('crackTime').textContent = 
-                password ? calculateCrackTime(password) : '-';
+            // Knackzeit berechnen
+            const crackTime = password 
+                ? estimateCrackTime(calculateEntropy(password))
+                : "-";
+            
+            document.getElementById('crackTime').textContent = crackTime;
         }
 
         document.querySelector('.password-input').addEventListener('input', (e) => {
             updateUI(e.target.value);
         });
+
+        // Initialer Status
+        updateUI('');
     </script>
 </body>
 </html>
