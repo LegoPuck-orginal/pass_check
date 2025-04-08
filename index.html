@@ -201,25 +201,27 @@
             const seconds = Math.pow(2, entropy) / guessesPerSecond;
             
             const units = [
-                { limit: 1, unit: "Sofort" },
                 { limit: 60, unit: "Sekunden" },
-                { limit: 3600, unit: "Stunden" },
-                { limit: 86400, unit: "Tagen" },
-                { limit: 2592000, unit: "Monaten" },
-                { limit: 31536000, unit: "Jahren" },
-                { limit: Infinity, unit: "Jahrhunderten" }
+                { limit: 60, unit: "Minuten" },
+                { limit: 24, unit: "Stunden" },
+                { limit: 30, unit: "Tagen" },
+                { limit: 12, unit: "Monaten" },
+                { limit: 100, unit: "Jahren" },
             ];
 
+            // Sofort behandeln
+            if (seconds < 1) return "Sofort";
+            
             let time = seconds;
-            for (const unit of units) {
-                if (time < unit.limit) {
-                    return unit.unit === "Sofort" 
-                        ? unit.unit 
-                        : `${Math.ceil(time)} ${unit.unit}`;
-                }
-                time /= unit.limit;
+            let unitIndex = 0;
+            
+            // Durch die Einheiten iterieren und umrechnen
+            while (unitIndex < units.length - 1 && time >= units[unitIndex].limit) {
+                time /= units[unitIndex].limit;
+                unitIndex++;
             }
-            return "Mehrere Jahrhunderte";
+            
+            return `${Math.ceil(time)} ${units[unitIndex].unit}`;
         }
 
         function updateUI(password) {
